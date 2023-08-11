@@ -232,3 +232,4 @@ terraform.rc
 
 
 cloudsdp-*.json
+.vscode/

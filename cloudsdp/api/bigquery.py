@@ -54,6 +54,10 @@ class BigQuery:
         table = self.client.create_table(table)
         return table
 
+    def delete_dataset(self, dataset_name, delete_contents=False, not_found_ok=False):
+        dataset_id = self._get_dataset_id(dataset_name)
+        self.client.delete_dataset(dataset_id, delete_contents=delete_contents, not_found_ok=not_found_ok)
+
     def query(self, query):
         query_job = self.client.query(query)
         rows = query_job.result()

@@ -11,6 +11,8 @@ jobs:
   release:
     # This job will only run if the PR has been merged (and not closed without merging).
     if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Show Refs

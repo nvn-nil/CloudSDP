@@ -1,12 +1,16 @@
+import os
+
 from cloudsdp.api.bigquery import BigQuery
+
+PROJECT_NAME = os.environ.get("EXAMPLE_PROJECT_NAME", "DUMMY_PROJECT")
 
 
 def main():
-    bq = BigQuery("cloudsdp")
+    bq = BigQuery(PROJECT_NAME)
     dataset_name = "test_data_set_askdjalksdj"
     table_name = "asdjahskdjhashdalskjdlajs"
 
-    data = [{"name": "Naveen", "age": 29}, {"name": "Something", "age": 22}]
+    data = [{"name": "Someone", "age": 29}, {"name": "Something", "age": 22}]
 
     data_schema = [
         {"name": "name", "type": "STRING", "mode": "REQUIRED"},

@@ -4,37 +4,18 @@ from google.cloud import bigquery
 from google.cloud.exceptions import GoogleAPICallError, NotFound
 
 
-# TODO: Make the return from all the ingestion methods consistent.
-# Here ingest_csvs_from_cloud_bucket returns result but ingest_rows_json returns list of errors
 def compare_schema(schema_a, schema_b):
     """
-    Compare two lists and logs the difference.
-    :param list1: first list.
-    :param list2: second list.
-    :return:      if there is difference between both lists.
+    Compare two schemas
+    :param schema_a: first list of schema fields.
+    :param schema_b: second list of schema fields.
+    :return:      if there is difference between both schema.
     """
     diff = [i for i in schema_a + schema_b if i not in schema_a or i not in schema_b]
     schema_equal = len(diff) == 0
     return schema_equal
 
 
-# table_schema = [
-#     {
-#         'name': 'id',
-#         'type': 'INTEGER',
-#         'mode': 'REQUIRED'
-#     },
-#     {
-#         'name': 'first_name',
-#         'type': 'STRING',
-#         'mode': 'NULLABLE'
-#     },
-#     {
-#         'name': 'last_name',
-#         'type': 'STRING',
-#         'mode': 'NULLABLE'
-#     }
-# ]
 def construct_schema_fields(schema):
     deserialized_schema = []
     for row in schema:

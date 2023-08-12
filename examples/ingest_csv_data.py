@@ -22,7 +22,7 @@ def main():
     print("Creating table")
     bq.create_table(table_name, data_schema, dataset_name)
 
-    csv_uris = ["gs://mybucket/name_age_data_1.csv", "gs://mybucket/name_age_data_1.csv"]
+    csv_uris = ["gs://mybucket/name_age_data_1.csv", "gs://mybucket/name_age_data_2.csv"]
 
     print("Ingesting data")
     result = bq.ingest_csvs_from_cloud_bucket(

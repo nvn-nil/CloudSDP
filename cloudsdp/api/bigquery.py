@@ -1,7 +1,11 @@
+from concurrent.futures import TimeoutError
+
 from google.cloud import bigquery
-from google.cloud.exceptions import NotFound
+from google.cloud.exceptions import GoogleAPICallError, NotFound
 
 
+# TODO: Make the return from all the ingestion methods consistent.
+# Here ingest_csvs_from_cloud_bucket returns result but ingest_rows_json returns list of errors
 def compare_schema(schema_a, schema_b):
     """
     Compare two lists and logs the difference.
@@ -145,3 +149,43 @@ class BigQuery:
         table_id = self._get_table_id(table_name, dataset_name)
         errors = self.client.insert_rows_json(table_id, data_rows)
         return errors
+
+    def ingest_csvs_from_cloud_bucket(
+        self,
+        csv_uris,
+        dataset_name,
+        table_name,
+        skip_leading_rows=1,
+        autodetect_schema=False,
+        job_id=None,
+        job_prefix=None,
+        job_config=None,
+        retry=None,
+        timeout=None,
+    ):
+
+        job_config = bigquery.LoadJobConfig()
+        job_config.autodetect = autodetect_schema
+        job_config.skip_leading_rows = skip_leading_rows
+        job_config.source_format = bigquery.SourceFormat.CSV
+
+        table_id = self._get_table_id(table_name, dataset_name)
+        # NOTE: uri should be a google cloud bucket path, like "gs://mybucket/mydata.csv"
+        job = self.client.load_table_from_uri(
+            csv_uris,
+            table_id,
+            job_id=job_id,
+            job_prefix=job_prefix,
+            job_config=job_config,
+            retry=retry,
+            timeout=timeout,
+        )
+
+        try:
+            # wait for load job to complete
+            result = job.result()
+            return result
+        except GoogleAPICallError:
+            raise Exception("Job failed")
+        except TimeoutError:
+            raise Exception("Timeout reached before load finished")

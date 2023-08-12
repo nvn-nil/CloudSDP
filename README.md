@@ -33,28 +33,82 @@ Or, install the library using poetry:
 
 #### Create dataset, ingest data and cleanup
 
+From a python dict:
+
 ```py
+import os
 
 from cloudsdp.api.bigquery import BigQuery
 
-project_name = "projectname
-dataset_name = "dataset_name_1"
-table_name = "table_name_1"
-
-data_schema = [
-    {"name": "name", "type": "STRING", "mode": "REQUIRED"},
-    {"name": "age", "type": "INTEGER", "mode": "REQUIRED"},
-]
-data = [{"name": "Someone", "age": 29}, {"name": "Something", "age": 92}]
+PROJECT_NAME = "project_name"
 
 
-bq = BigQuery(project_name)
+def main():
+    bq = BigQuery(PROJECT_NAME)
+    dataset_name = "dataset_1"
+    table_name = "table_1"
 
-bq.create_dataset(dataset_name, recreate=False) # recreate False is the default to prevent deletion of data
-bq.create_table(table_name, data_schema, dataset_name, recreate=True) # recreate False is the default to prevent deletion of data
+    data = [{"name": "Someone", "age": 29}, {"name": "Something", "age": 22}]
 
-errors = bq.ingest_rows_json(data, dataset_name, table_name)
+    data_schema = [
+        {"name": "name", "type": "STRING", "mode": "REQUIRED"},
+        {"name": "age", "type": "INTEGER", "mode": "REQUIRED"},
+    ]
 
-bq.delete_dataset(dataset_name, delete_contents=True)
+    bq.create_dataset(dataset_name)
+
+    bq.create_table(table_name, data_schema, dataset_name)
+
+    errors = bq.ingest_rows_json(data, dataset_name, table_name)
+    if errors:
+        print("Errors", ";".join(errors))
+
+    bq.delete_dataset(dataset_name, delete_contents=True, not_found_ok=True)
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+From csv files stored in GCS:
+
+```py
+
+import os
+
+from cloudsdp.api.bigquery import BigQuery
+
+
+PROJECT_NAME = "project_name"
+
+
+def main():
+    bq = BigQuery(PROJECT_NAME)
+    dataset_name = "dataset_1"
+    table_name = "table_1"
+
+    data_schema = [
+        {"name": "name", "type": "STRING", "mode": "REQUIRED"},
+        {"name": "age", "type": "INTEGER", "mode": "REQUIRED"},
+    ]
+
+    bq.create_dataset(dataset_name)
+
+    bq.create_table(table_name, data_schema, dataset_name)
+
+    csv_uris = ["gs://mybucket/name_age_data_1.csv", "gs://mybucket/name_age_data_2.csv"]
+
+    result = bq.ingest_csvs_from_cloud_bucket(
+        csv_uris, dataset_name, table_name, skip_leading_rows=1, autodetect_schema=False, timeout=120
+    )
+    print(result)
+
+    bq.delete_dataset(dataset_name, delete_contents=True, not_found_ok=True)
+
+
+if __name__ == "__main__":
+    main()
+
 
 ```

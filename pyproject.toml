@@ -4,6 +4,9 @@ version = "0.1.1"
 description = ""
 authors = ["Naveen Anil <naveenms01@gmail.com>"]
 readme = "README.md"
+repository = "https://github.com/nvn-nil/CloudSDP"
+documentation = "https://nvn-nil.github.io/CloudSDP/"
+keywords = ["cloud", "data", "processing", "extraction", "transformation", "ingestion", "ETL", "BigQuery", "Google Cloud", "data pipeline"]
 
 [tool.poetry.dependencies]
 python = "^3.9"

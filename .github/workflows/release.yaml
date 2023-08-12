@@ -37,13 +37,3 @@ jobs:
           body: ${{ github.event.pull_request.body }}
           draft: false
           prerelease: false
-
-  publish:
-    # This job will only run if the PR has been merged (and not closed without merging).
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-      - name: Build and publish to pypi
-        uses: JRubics/poetry-publish@v1.17
-        with:
-          pypi_token: ${{ secrets.PYPI_TOKEN }}

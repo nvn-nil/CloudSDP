@@ -141,7 +141,7 @@ class BigQuery:
 
         return rows
 
-    def ingest_json(self, data_rows, dataset_name, table_name):
+    def ingest_rows_json(self, data_rows, dataset_name, table_name):
         table_id = self._get_table_id(table_name, dataset_name)
         errors = self.client.insert_rows_json(table_id, data_rows)
         return errors

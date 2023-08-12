@@ -1,0 +1,39 @@
+name: release
+
+# Only trigger when a pull request into main branch is closed.
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  release:
+    # This job will only run if the PR has been merged (and not closed without merging).
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show Refs
+        run: |
+          echo "PR #${{ github.event.number }} (${{ github.head_ref }}) has been merged to main"
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+
+      - name: Get version
+        id: get_version
+        run: echo "version=$(poetry version -s)" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: ${{ github.event.pull_request.title }}
+          body: ${{ github.event.pull_request.body }}
+          draft: false
+          prerelease: false

@@ -7,8 +7,8 @@ PROJECT_NAME = os.environ.get("EXAMPLE_PROJECT_NAME", "DUMMY_PROJECT")
 
 def main():
     bq = BigQuery(PROJECT_NAME)
-    dataset_name = "test_data_set_askdjalksdj"
-    table_name = "asdjahskdjhashdalskjdlajs"
+    dataset_name = "dataset_1"
+    table_name = "table_1"
 
     data = [{"name": "Someone", "age": 29}, {"name": "Something", "age": 22}]
 
@@ -24,7 +24,7 @@ def main():
     bq.create_table(table_name, data_schema, dataset_name)
 
     print("Ingesting data")
-    errors = bq.ingest_json(data, dataset_name, table_name)
+    errors = bq.ingest_rows_json(data, dataset_name, table_name)
     if errors:
         print("Errors", ";".join(errors))
 

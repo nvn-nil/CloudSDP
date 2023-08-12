@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cloudsdp"
-version = "0.1.4"
+version = "0.1.5"
 description = ""
 authors = ["Naveen Anil <naveenms01@gmail.com>"]
 readme = "README.md"

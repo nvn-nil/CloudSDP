@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/nvn-nil/CloudSDP/branch/main/graph/badge.svg?token=P0U7YNO17D)](https://codecov.io/gh/nvn-nil/CloudSDP)
+[![test](https://github.com/nvn-nil/CloudSDP/actions/workflows/ci.yaml/badge.svg)](https://github.com/nvn-nil/CloudSDP/actions/workflows/ci.yaml)
+
 # CloudSDP Library
 
 The CloudSDP library is designed to simplify the creation and management of serverless data pipelines between Google Cloud Run and Google BigQuery. It provides a developer-friendly interface to extract data from various sources, transform it, and seamlessly load it into BigQuery tables, all while leveraging the power of serverless architecture.

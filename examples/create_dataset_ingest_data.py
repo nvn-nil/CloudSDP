@@ -13,8 +13,8 @@ def main():
     data = [{"name": "Someone", "age": 29}, {"name": "Something", "age": 22}]
 
     data_schema = [
-        {"name": "name", "type": "STRING", "mode": "REQUIRED"},
-        {"name": "age", "type": "INTEGER", "mode": "REQUIRED"},
+        {"name": "name", "field_type": "STRING", "mode": "REQUIRED"},
+        {"name": "age", "field_type": "INTEGER", "mode": "REQUIRED"},
     ]
 
     print("Creating dataset")

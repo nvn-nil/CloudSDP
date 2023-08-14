@@ -1,0 +1,7 @@
+[paths]
+source =
+    cloudsdp/
+
+[run]
+omit =
+    test/*

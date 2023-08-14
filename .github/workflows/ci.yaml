@@ -1,0 +1,51 @@
+
+name: ci
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  check-semantic-version:
+    if: "!contains(github.event.head_commit.message, 'skipci')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: octue/check-semantic-version@1.0.0.beta-9
+        with:
+          path: pyproject.toml
+          breaking_change_indicated_by: minor
+
+  run-tests:
+    if: "!contains(github.event.head_commit.message, 'skipci')"
+    runs-on: ${{ matrix.os }}
+    env:
+      USING_COVERAGE: "3.9"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.3.2
+
+      - name: Check pyproject.toml file
+        run: poetry check
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Run tests
+        run: poetry run pytest

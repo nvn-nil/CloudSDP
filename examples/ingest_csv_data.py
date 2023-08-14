@@ -12,8 +12,8 @@ def main():
     table_name = "table_1"
 
     data_schema = [
-        {"name": "name", "type": "STRING", "mode": "REQUIRED"},
-        {"name": "age", "type": "INTEGER", "mode": "REQUIRED"},
+        {"name": "name", "field_type": "STRING", "mode": "REQUIRED"},
+        {"name": "age", "field_type": "INTEGER", "mode": "REQUIRED"},
     ]
 
     print("Creating dataset")

@@ -51,8 +51,8 @@ def main():
     data = [{"name": "Someone", "age": 29}, {"name": "Something", "age": 22}]
 
     data_schema = [
-        {"name": "name", "type": "STRING", "mode": "REQUIRED"},
-        {"name": "age", "type": "INTEGER", "mode": "REQUIRED"},
+        {"name": "name", "field_type": "STRING", "mode": "REQUIRED"},
+        {"name": "age", "field_type": "INTEGER", "mode": "REQUIRED"},
     ]
 
     bq.create_dataset(dataset_name)
@@ -89,8 +89,8 @@ def main():
     table_name = "table_1"
 
     data_schema = [
-        {"name": "name", "type": "STRING", "mode": "REQUIRED"},
-        {"name": "age", "type": "INTEGER", "mode": "REQUIRED"},
+        {"name": "name", "field_type": "STRING", "mode": "REQUIRED"},
+        {"name": "age", "field_type": "INTEGER", "mode": "REQUIRED"},
     ]
 
     bq.create_dataset(dataset_name)

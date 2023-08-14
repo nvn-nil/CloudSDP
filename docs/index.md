@@ -41,8 +41,8 @@ dataset_name = "dataset_name_1"
 table_name = "table_name_1"
 
 data_schema = [
-    {"name": "name", "type": "STRING", "mode": "REQUIRED"},
-    {"name": "age", "type": "INTEGER", "mode": "REQUIRED"},
+    {"name": "name", "field_type": "STRING", "mode": "REQUIRED"},
+    {"name": "age", "field_type": "INTEGER", "mode": "REQUIRED"},
 ]
 data = [{"name": "Someone", "age": 29}, {"name": "Something", "age": 92}]
 

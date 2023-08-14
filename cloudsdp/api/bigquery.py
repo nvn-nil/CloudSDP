@@ -1,7 +1,8 @@
 from concurrent.futures import TimeoutError
 
+from google.api_core.exceptions import GoogleAPICallError
 from google.cloud import bigquery
-from google.cloud.exceptions import GoogleAPICallError, NotFound
+from google.cloud.exceptions import NotFound
 
 
 def compare_schema(schema_a, schema_b):
@@ -37,6 +38,9 @@ class BigQuery:
         self.location = location
 
         self.client = bigquery.Client()
+
+    def __repr__(self):
+        return f"<BigQuery(project_id={self.project_id}, location={self.location})>"
 
     def _get_dataset_id(self, dataset_name):
         return f"{self.project_id}.{dataset_name}"

@@ -48,21 +48,21 @@ class BigQuery:
     def _get_table_id(self, table_name, dataset_name):
         return f"{self.project_id}.{dataset_name}.{table_name}"
 
-    def _unguarded_create_table(self, table_name, table_schema, dataset_name):
+    def _unguarded_create_table(self, table_name, table_schema, dataset_name, timeout=None):
         table_id = self._get_table_id(table_name, dataset_name)
 
         schema = construct_schema_fields(table_schema)
         table = bigquery.Table(table_id, schema=schema)
-        table = self.client.create_table(table)
+        table = self.client.create_table(table, timeout=timeout)
 
         return table
 
-    def _unguarded_create_dataset(self, dataset_name):
+    def _unguarded_create_dataset(self, dataset_name, timeout=None):
         dataset_id = self._get_dataset_id(dataset_name)
 
         dataset = bigquery.Dataset(dataset_id)
         dataset.location = self.location
-        dataset = self.client.create_dataset(dataset, timeout=30)
+        dataset = self.client.create_dataset(dataset, timeout=timeout)
         return dataset
 
     def create_dataset(self, dataset_name, recreate=True):

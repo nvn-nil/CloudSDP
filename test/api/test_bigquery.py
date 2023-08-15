@@ -58,7 +58,7 @@ class TestBigQuery(BaseTestCase):
     def test_unguarded_create_table(self):
         bq = BigQuery(self.project_id)
 
-        table_name = "table"
+        table_name = "table_name"
         dataset_name = "dataset"
         table_id = bq._get_table_id(table_name, dataset_name)
 

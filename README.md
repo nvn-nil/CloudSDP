@@ -42,7 +42,7 @@ Ingest data from a pandas dataframe:
 import os
 import pandas as pd
 
-from cloudsdp.api.bigquery import BigQuery
+from cloudsdp.api.bigquery import BigQuery, WriteDisposition
 
 
 PROJECT_NAME = "project_name"
@@ -57,6 +57,7 @@ def main():
         "name": [ f"Name{str(el)}" for el in range(0, 10000)],
         "score": [ num for num in range(0, 10000)]
     }
+    df = pd.DataFrame(data)
     data_schema = [
         {"name": "name", "field_type": "STRING", "mode": "REQUIRED"},
         {"name": "score", "field_type": "NUMERIC", "mode": "REQUIRED"},
@@ -65,9 +66,7 @@ def main():
     bq.create_dataset(dataset_name)
     bq.create_table(table_name, data_schema, dataset_name)
 
-    df = pd.DataFrame(data)
-
-    bq.ingest_from_dataframe(df, dataset_name, table_name, write_disposition=WRITE_DISPOSITION.WRITE_IF_TABLE_EMPTY)
+    bq.ingest_from_dataframe(df, dataset_name, table_name, write_disposition=WriteDisposition.WRITE_IF_TABLE_EMPTY)
 
     bq.delete_dataset(dataset_name, delete_contents=True, not_found_ok=True)
 ```

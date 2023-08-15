@@ -1,35 +1,25 @@
+import logging
 from concurrent.futures import TimeoutError
 
+import pyarrow
 from google.api_core.exceptions import GoogleAPICallError
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 
+from cloudsdp.utilities import (
+    clean_dataframe_using_schema,
+    compare_schema,
+    construct_schema_fields,
+    deconstruct_schema_fields,
+)
 
-def compare_schema(schema_a, schema_b):
-    """
-    Compare two schemas
-    :param schema_a: first list of schema fields.
-    :param schema_b: second list of schema fields.
-    :return:      if there is difference between both schema.
-    """
-    diff = [i for i in schema_a + schema_b if i not in schema_a or i not in schema_b]
-    schema_equal = len(diff) == 0
-    return schema_equal
+logger = logging.getLogger(__name__)
 
 
-def construct_schema_fields(schema):
-    deserialized_schema = []
-    for row in schema:
-        deserialized_schema.append(bigquery.SchemaField(row["name"], row["field_type"], row["mode"]))
-    return deserialized_schema
-
-
-def deconstruct_schema_fields(schema):
-    serialized_schema = []
-    for field in schema.fields:
-        serialized_schema.append({"name": field.name, "field_type": field.field_type, "mode": field.mode})
-
-    return serialized_schema
+class WriteDisposition:
+    WRITE_IF_TABLE_EMPTY = "WRITE_EMPTY"
+    WRITE_AFTER_TABLE_TRUNCATE = "WRITE_TRUNCATE"
+    WRITE_APPEND = "WRITE_APPEND"
 
 
 class BigQuery:
@@ -42,6 +32,10 @@ class BigQuery:
     def __repr__(self):
         return f"<BigQuery(project_id={self.project_id}, location={self.location})>"
 
+    def _check_table_name(self, table_name):
+        if table_name == "table":
+            raise Exception("'table' is a reserved table id, use something else")
+
     def _get_dataset_id(self, dataset_name):
         return f"{self.project_id}.{dataset_name}"
 
@@ -49,6 +43,8 @@ class BigQuery:
         return f"{self.project_id}.{dataset_name}.{table_name}"
 
     def _unguarded_create_table(self, table_name, table_schema, dataset_name, timeout=None):
+        self._check_table_name(table_name)
+
         table_id = self._get_table_id(table_name, dataset_name)
 
         schema = construct_schema_fields(table_schema)
@@ -77,17 +73,19 @@ class BigQuery:
         return dataset
 
     def create_table(self, table_name, table_schema, dataset_name, recreate_if_schema_different=False, recreate=False):
+        self._check_table_name(table_name)
+
         table = self.get_table(table_name, dataset_name, not_found_ok=True)
 
         if table and not (recreate or recreate_if_schema_different):
-            return table
-
-        schema_equal = compare_schema(deconstruct_schema_fields(table.schema), table_schema)
-
-        if table and (recreate or (not schema_equal and recreate_if_schema_different)):
-            self.delete_table(table_name, dataset_name, not_found_ok=True)
-        elif table:
             raise Exception("Table already exists")
+
+        if table:
+            schema_equal = compare_schema(deconstruct_schema_fields(table.schema), table_schema)
+            if recreate or (not schema_equal and recreate_if_schema_different):
+                self.delete_table(table_name, dataset_name, not_found_ok=True)
+            else:
+                raise Exception("Table already exists")
 
         table = self._unguarded_create_table(table_name, table_schema, dataset_name)
         return table
@@ -134,6 +132,56 @@ class BigQuery:
         table_id = self._get_table_id(table_name, dataset_name)
         errors = self.client.insert_rows_json(table_id, data_rows)
         return errors
+
+    def ingest_from_dataframe(
+        self,
+        dataframe,
+        dataset_name,
+        table_name,
+        table_schema=None,
+        source_format="PARQUET",
+        write_disposition=WriteDisposition.WRITE_IF_TABLE_EMPTY,
+    ):
+        """Ingest data from a dataframe. Writes the dataframe using the specified source_format and write_disposition
+
+        :param dataframe: _description_
+        :type dataframe: _type_
+        :param dataset_name: _description_
+        :type dataset_name: _type_
+        :param table_name: _description_
+        :type table_name: _type_
+        :param source_format: _description_, defaults to "PARQUET"
+        :type source_format: str, optional
+        :param write_disposition: Action to take when writing data to table, defaults to "WRITE_EMPTY"
+            possible options:
+            - WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the data, removes the
+                constraints, and uses the schema from the query result.
+            - WRITE_APPEND: If the table already exists, BigQuery appends the data to the table.
+            - WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is
+                returned in the job result.
+        :type write_disposition: str, optional
+        :raises exceptions.ConversionError: _description_
+        """
+        job_config = bigquery.LoadJobConfig()
+        job_config.write_disposition = write_disposition
+        job_config.source_format = source_format
+
+        table = self.get_table(table_name, dataset_name, not_found_ok=False)
+
+        schema = table.schema if table_schema is None else table_schema
+        schema = construct_schema_fields(schema)
+
+        try:
+            cleaned_df = clean_dataframe_using_schema(dataframe, schema)
+            job = self.client.load_table_from_dataframe(
+                cleaned_df,
+                table,
+                job_config=job_config,
+                location=self.location,
+            )
+            job.result()
+        except pyarrow.lib.ArrowInvalid as ex:
+            raise Exception("Could not convert DataFrame to Parquet.") from ex
 
     def ingest_csvs_from_cloud_bucket(
         self,

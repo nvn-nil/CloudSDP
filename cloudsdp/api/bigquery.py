@@ -16,7 +16,7 @@ from cloudsdp.utilities import (
 logger = logging.getLogger(__name__)
 
 
-class WRITE_DISPOSITION:
+class WriteDisposition:
     WRITE_IF_TABLE_EMPTY = "WRITE_EMPTY"
     WRITE_AFTER_TABLE_TRUNCATE = "WRITE_TRUNCATE"
     WRITE_APPEND = "WRITE_APPEND"
@@ -140,7 +140,7 @@ class BigQuery:
         table_name,
         table_schema=None,
         source_format="PARQUET",
-        write_disposition=WRITE_DISPOSITION.WRITE_IF_TABLE_EMPTY,
+        write_disposition=WriteDisposition.WRITE_IF_TABLE_EMPTY,
     ):
         """Ingest data from a dataframe. Writes the dataframe using the specified source_format and write_disposition
 

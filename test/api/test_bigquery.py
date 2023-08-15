@@ -7,6 +7,7 @@ from google.cloud import bigquery
 
 from cloudsdp.api.bigquery import (
     BigQuery,
+    WriteDisposition,
     clean_dataframe_using_schema,
     construct_schema_fields,
 )
@@ -132,3 +133,35 @@ class TestBigQuery(BaseTestCase):
 
             with self.assertRaisesRegexp(Exception, r"DataFrame has NaNs in non nullable columns: \[score\]"):
                 clean_dataframe_using_schema(df_test, schema)
+
+    def test_ingest_from_dataframe(self):
+        bq = BigQuery(self.project_id)
+
+        data = {"name": ["A", "B", "C", "D"], "score": [1.0, 2.0, 3.0, 4.0]}
+        schema_raw = [
+            {"name": "name", "field_type": "STRING", "mode": "REQUIRED"},
+            {"name": "score", "field_type": "NUMERIC", "mode": "REQUIRED"},
+        ]
+
+        dataset_name = "dataset_name"
+        table_name = "table_name"
+        df = pd.DataFrame(data)
+
+        with patch("cloudsdp.api.bigquery.BigQuery.get_table") as patched_get_table:
+            table_id = bq._get_table_id(table_name, dataset_name)
+            schema = construct_schema_fields(schema_raw)
+            table = bigquery.Table(table_id, schema=schema)
+
+            patched_get_table.return_value = table
+
+            bq.ingest_from_dataframe(df, "dataset_name", "table_name")
+
+            bq.client.load_table_from_dataframe.assert_called_once()
+            args = bq.client.load_table_from_dataframe.call_args
+
+            source_format = "PARQUET"
+            pd.testing.assert_frame_equal(df, args.args[0])
+            self.assertEqual(table, args.args[1])
+            self.assertEqual(args.kwargs["location"], bq.location)
+            self.assertEqual(args.kwargs["job_config"].source_format, source_format)
+            self.assertEqual(args.kwargs["job_config"].write_disposition, WriteDisposition.WRITE_IF_TABLE_EMPTY)

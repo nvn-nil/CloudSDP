@@ -36,7 +36,43 @@ Or, install the library using poetry:
 
 #### Create dataset, ingest data and cleanup
 
-From a python dict:
+Ingest data from a pandas dataframe:
+
+```py
+import os
+import pandas as pd
+
+from cloudsdp.api.bigquery import BigQuery
+
+
+PROJECT_NAME = "project_name"
+
+
+def main():
+    bq = BigQuery(PROJECT_NAME)
+    dataset_name = "dataset_1"
+    table_name = "table_1"
+
+    data = {
+        "name": [ f"Name{str(el)}" for el in range(0, 10000)],
+        "score": [ num for num in range(0, 10000)]
+    }
+    data_schema = [
+        {"name": "name", "field_type": "STRING", "mode": "REQUIRED"},
+        {"name": "score", "field_type": "NUMERIC", "mode": "REQUIRED"},
+    ]
+
+    bq.create_dataset(dataset_name)
+    bq.create_table(table_name, data_schema, dataset_name)
+
+    df = pd.DataFrame(data)
+
+    bq.ingest_from_dataframe(df, dataset_name, table_name, write_disposition=WRITE_DISPOSITION.WRITE_IF_TABLE_EMPTY)
+
+    bq.delete_dataset(dataset_name, delete_contents=True, not_found_ok=True)
+```
+
+From a list of python dicts:
 
 ```py
 import os
@@ -67,11 +103,6 @@ def main():
         print("Errors", ";".join(errors))
 
     bq.delete_dataset(dataset_name, delete_contents=True, not_found_ok=True)
-
-
-if __name__ == "__main__":
-    main()
-
 ```
 
 From csv files stored in GCS:
@@ -108,10 +139,4 @@ def main():
     print(result)
 
     bq.delete_dataset(dataset_name, delete_contents=True, not_found_ok=True)
-
-
-if __name__ == "__main__":
-    main()
-
-
 ```

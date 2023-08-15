@@ -42,6 +42,10 @@ class BigQuery:
     def __repr__(self):
         return f"<BigQuery(project_id={self.project_id}, location={self.location})>"
 
+    def _check_table_name(self, table_name):
+        if table_name == "table":
+            raise Exception("'table' is a reserved table id, use something else")
+
     def _get_dataset_id(self, dataset_name):
         return f"{self.project_id}.{dataset_name}"
 
@@ -49,6 +53,8 @@ class BigQuery:
         return f"{self.project_id}.{dataset_name}.{table_name}"
 
     def _unguarded_create_table(self, table_name, table_schema, dataset_name, timeout=None):
+        self._check_table_name(table_name)
+
         table_id = self._get_table_id(table_name, dataset_name)
 
         schema = construct_schema_fields(table_schema)
@@ -77,17 +83,19 @@ class BigQuery:
         return dataset
 
     def create_table(self, table_name, table_schema, dataset_name, recreate_if_schema_different=False, recreate=False):
+        self._check_table_name(table_name)
+
         table = self.get_table(table_name, dataset_name, not_found_ok=True)
 
         if table and not (recreate or recreate_if_schema_different):
             return table
 
-        schema_equal = compare_schema(deconstruct_schema_fields(table.schema), table_schema)
-
-        if table and (recreate or (not schema_equal and recreate_if_schema_different)):
-            self.delete_table(table_name, dataset_name, not_found_ok=True)
-        elif table:
-            raise Exception("Table already exists")
+        if table:
+            schema_equal = compare_schema(deconstruct_schema_fields(table.schema), table_schema)
+            if recreate or (not schema_equal and recreate_if_schema_different):
+                self.delete_table(table_name, dataset_name, not_found_ok=True)
+            else:
+                raise Exception("Table already exists")
 
         table = self._unguarded_create_table(table_name, table_schema, dataset_name)
         return table
